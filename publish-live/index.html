@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="icons/icon-192.png" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=29" />
+    <link rel="stylesheet" href="styles.css?v=30" />
   </head>
   <body>
     <main class="app-shell">
@@ -18,7 +18,7 @@
         <div>
           <p class="eyebrow">Dagelijks woorden leren</p>
           <h1>Nederlands A1-C1</h1>
-          <p class="version-tag">版本 v29：今日20词后停止，检测今日词，检测有终点</p>
+          <p class="version-tag">版本 v30：今日20词后停止，可回顾今日词，检测有终点</p>
         </div>
         <button class="icon-button" id="speakCurrent" type="button" aria-label="播放当前单词" title="播放当前单词">
           <span aria-hidden="true">▶</span>
@@ -85,6 +85,7 @@
           <p id="goalMessage">你已经完成今天的单词目标。</p>
           <div class="goal-actions">
             <button class="primary" id="goalQuizBtn" type="button">去检测</button>
+            <button class="secondary" id="goalReviewBtn" type="button">回顾今日词</button>
             <button class="secondary" id="goalMoreBtn" type="button">继续加练</button>
           </div>
         </article>
@@ -146,12 +147,12 @@
       </section>
     </main>
 
-    <script src="wordbank-extra.js?v=29"></script>
-    <script src="audio-index.js?v=29"></script>
-    <script src="app.js?v=29"></script>
+    <script src="wordbank-extra.js?v=30"></script>
+    <script src="audio-index.js?v=30"></script>
+    <script src="app.js?v=30"></script>
     <script>
       if ("serviceWorker" in navigator && location.protocol !== "file:") {
-        navigator.serviceWorker.register("./sw.js?v=29");
+        navigator.serviceWorker.register("./sw.js?v=30");
       }
     </script>
   </body>

@@ -306,6 +306,8 @@ const state = {
   quizMode: "meaning",
   quizAnswered: false,
   extraPractice: false,
+  reviewToday: false,
+  reviewIndex: 0,
   progress: loadProgress()
 };
 
@@ -525,6 +527,10 @@ function cleanDutch(value) {
 }
 
 function currentWord() {
+  if (state.reviewToday) {
+    const words = todayLearnedWords();
+    return words[state.reviewIndex % words.length] || filteredWords()[0] || ALL_WORDS[0];
+  }
   const words = filteredWords();
   return words[state.currentIndex % words.length] || ALL_WORDS[0];
 }
@@ -996,7 +1002,7 @@ function renderLearn() {
   const word = currentWord();
   const example = displayExample(word);
   const goalDone = isDailyGoalDone();
-  const pausedForGoal = goalDone && !state.extraPractice;
+  const pausedForGoal = goalDone && !state.extraPractice && !state.reviewToday;
   $("goalCard").classList.toggle("hidden", !goalDone);
   $("goalMessage").textContent = goalDone
     ? `今天已背 ${learnedTodayCount()} / ${dailyGoal()} 个词。可以去检测巩固，或继续加练。`
@@ -1012,14 +1018,23 @@ function renderLearn() {
   $("wordExampleZh").textContent = example.zh;
   renderForms(word);
   renderStats();
-  $("againBtn").textContent = goalDone && !state.extraPractice ? "去检测" : "还不熟";
-  $("knownBtn").textContent = goalDone && !state.extraPractice ? "继续加练" : "记住了";
+  $("againBtn").textContent = state.reviewToday ? "上一个" : goalDone && !state.extraPractice ? "去检测" : "还不熟";
+  $("knownBtn").textContent = state.reviewToday ? "下一个" : goalDone && !state.extraPractice ? "继续加练" : "记住了";
 }
 
 function markKnown(isKnown) {
+  if (state.reviewToday) {
+    const words = todayLearnedWords();
+    if (words.length) {
+      state.reviewIndex = (state.reviewIndex + (isKnown ? 1 : words.length - 1)) % words.length;
+    }
+    renderLearn();
+    return;
+  }
   if (isDailyGoalDone() && !state.extraPractice) {
     if (isKnown) {
       state.extraPractice = true;
+      state.reviewToday = false;
       renderLearn();
     } else {
       setView("quiz");
@@ -1260,19 +1275,28 @@ function bindEvents() {
   });
   $("searchBox").addEventListener("input", renderLibrary);
   $("goalQuizBtn").addEventListener("click", () => setView("quiz"));
+  $("goalReviewBtn").addEventListener("click", () => {
+    state.reviewToday = true;
+    state.extraPractice = false;
+    state.reviewIndex = 0;
+    renderLearn();
+  });
   $("goalMoreBtn").addEventListener("click", () => {
     state.extraPractice = true;
+    state.reviewToday = false;
     renderLearn();
   });
   $("dailyGoal").addEventListener("change", (event) => {
     state.progress.goal = Number(event.target.value) || 20;
     state.extraPractice = false;
+    state.reviewToday = false;
     saveProgress();
     renderLearn();
   });
   $("levelFilter").addEventListener("change", (event) => {
     state.level = event.target.value;
     state.currentIndex = 0;
+    state.reviewToday = false;
     renderLearn();
     renderLibrary();
     if (state.view === "quiz") newQuiz("meaning");
