@@ -526,6 +526,36 @@ function currentWord() {
   return words[state.currentIndex % words.length] || ALL_WORDS[0];
 }
 
+function uniqueWords(words) {
+  const seen = new Set();
+  return words.filter((word) => {
+    if (seen.has(word.nl)) return false;
+    seen.add(word.nl);
+    return true;
+  });
+}
+
+function todayLearnedWords() {
+  const learned = new Set(state.progress.days[todayKey] || []);
+  return availableWords().filter((word) => learned.has(word.nl));
+}
+
+function quizWords(mode = "meaning") {
+  const todayWords = todayLearnedWords();
+  if (mode === "dictation") {
+    return todayWords.length ? todayWords : filteredWords();
+  }
+
+  const todayMeaningWords = todayWords.filter(hasChineseMeaning);
+  if (todayMeaningWords.length >= 4) return todayMeaningWords;
+
+  return uniqueWords([
+    ...todayMeaningWords,
+    ...filteredWords().filter(hasChineseMeaning),
+    ...availableWords().filter(hasChineseMeaning)
+  ]);
+}
+
 function lemmaOf(word) {
   return word.nl.replace(/^(de|het|een)\s+/i, "").trim();
 }
@@ -1010,7 +1040,7 @@ function setQuizMode(mode) {
 }
 
 function newQuiz(mode = "meaning", keepCurrentWord = false) {
-  const words = mode === "meaning" ? meaningQuizWords() : filteredWords();
+  const words = quizWords(mode);
   if (!keepCurrentWord || !state.quizWord) {
     state.quizWord = words[Math.floor(Math.random() * words.length)] || ALL_WORDS[0];
   }
@@ -1060,9 +1090,7 @@ function renderChoices() {
 }
 
 function meaningQuizWords() {
-  const words = filteredWords().filter(hasChineseMeaning);
-  const fallback = availableWords().filter(hasChineseMeaning);
-  return words.length >= 4 ? words : fallback;
+  return quizWords("meaning");
 }
 
 function recordQuiz(isCorrect) {

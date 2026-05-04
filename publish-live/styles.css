@@ -52,6 +52,12 @@ select {
   text-transform: uppercase;
 }
 
+.version-tag {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 4px;
+}
+
 h1,
 h2,
 p {
