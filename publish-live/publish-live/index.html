@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="NL Woorden" />
+    <title>Nederlands A2-C1</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">Dagelijks woorden leren</p>
+          <h1>Nederlands A1-C1</h1>
+        </div>
+        <button class="icon-button" id="speakCurrent" type="button" aria-label="播放当前单词" title="播放当前单词">
+          <span aria-hidden="true">▶</span>
+        </button>
+      </section>
+
+      <section class="status-strip" aria-label="今日学习状态">
+        <div>
+          <span id="learnedToday">0</span>
+          <small>今日已背</small>
+        </div>
+        <div>
+          <span id="accuracy">0%</span>
+          <small>检测正确率</small>
+        </div>
+        <div>
+          <span id="streak">0</span>
+          <small>连续天数</small>
+        </div>
+      </section>
+      <div class="audio-help">
+        <p class="audio-notice" id="audioNotice" role="status"></p>
+        <button class="audio-fallback hidden" id="openPronunciation" type="button">打开荷兰语发音页</button>
+      </div>
+
+      <nav class="tabs" aria-label="应用视图">
+        <button class="tab active" data-view="learn" type="button">背词</button>
+        <button class="tab" data-view="quiz" type="button">检测</button>
+        <button class="tab" data-view="library" type="button">词库</button>
+      </nav>
+
+      <section class="filters" aria-label="学习设置">
+        <label>
+          级别
+          <select id="levelFilter">
+            <option value="all">A1-C1</option>
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+          </select>
+        </label>
+        <label>
+          每日目标
+          <input id="dailyGoal" type="number" min="5" max="80" step="5" value="20" />
+        </label>
+      </section>
+      <section class="license-panel" id="licensePanel" aria-label="Pro 解锁">
+        <div>
+          <strong id="licenseTitle">免费试用版</strong>
+          <p id="licenseText">已开放 A1 前 200 个词。购买 Pro 后解锁 A1-C1 全词库、本地发音、例句发音和完整检测。</p>
+        </div>
+        <div class="license-row" id="licenseRow">
+          <input id="licenseCode" type="text" autocomplete="off" placeholder="输入激活码" />
+          <button id="activateLicense" type="button">解锁</button>
+        </div>
+        <p class="license-message" id="licenseMessage" role="status"></p>
+      </section>
+
+      <section class="view active" id="learnView">
+        <article class="word-card">
+          <div class="word-meta">
+            <span id="wordLevel">A2</span>
+            <span id="wordPos">名词 · zelfstandig naamwoord</span>
+          </div>
+          <button class="word-button" id="wordButton" type="button">
+            <span id="wordText">woord</span>
+            <small id="wordIpa">/woːrt/</small>
+          </button>
+          <div class="meaning" id="wordMeaning">中文释义</div>
+          <div class="example-line">
+            <p class="example" id="wordExample">Voorbeeldzin.</p>
+            <button class="mini-button" id="speakExample" type="button" aria-label="播放例句" title="播放例句">▶</button>
+          </div>
+          <p class="example-zh" id="wordExampleZh">例句中文。</p>
+          <div class="forms-panel" id="wordForms"></div>
+        </article>
+
+        <div class="actions">
+          <button class="secondary" id="againBtn" type="button">还不熟</button>
+          <button class="primary" id="knownBtn" type="button">记住了</button>
+        </div>
+      </section>
+
+      <section class="view" id="quizView">
+        <article class="quiz-card">
+          <div class="mode-switch" aria-label="检测形式">
+            <button class="mode-button active" id="meaningModeBtn" type="button">猜词义</button>
+            <button class="mode-button" id="dictationModeBtn" type="button">听写</button>
+          </div>
+          <div class="word-meta">
+            <span id="quizLevel">A2</span>
+            <span id="quizMode">听写</span>
+          </div>
+          <h2 id="quizPrompt">听发音写单词</h2>
+          <button class="listen-card" id="listenDictation" type="button">▶ 听荷兰语发音</button>
+          <div class="choices" id="choices"></div>
+          <div class="typing-row" id="typingRow">
+            <input id="typingAnswer" type="text" autocomplete="off" placeholder="输入你听到的荷兰语单词" />
+            <button id="typingCheck" type="button">检查</button>
+          </div>
+          <p class="feedback" id="feedback" role="status"></p>
+        </article>
+        <div class="actions">
+          <button class="secondary" id="playQuizWord" type="button">再听一次</button>
+          <button class="primary" id="nextQuiz" type="button">下一题</button>
+        </div>
+      </section>
+
+      <section class="view" id="libraryView">
+        <div class="library-head">
+          <input id="searchBox" type="search" placeholder="搜索荷兰语 / 中文 / 例句" />
+          <span id="wordCount">0 词</span>
+        </div>
+        <div class="word-list" id="wordList"></div>
+      </section>
+    </main>
+
+    <script src="wordbank-extra.js"></script>
+    <script src="audio-index.js"></script>
+    <script src="app.js"></script>
+    <script>
+      if ("serviceWorker" in navigator && location.protocol !== "file:") {
+        navigator.serviceWorker.register("./sw.js");
+      }
+    </script>
+  </body>
+</html>
