@@ -300,6 +300,9 @@ const state = {
   level: "all",
   currentIndex: 0,
   quizWord: null,
+  quizQueue: [],
+  quizIndex: 0,
+  quizCompleted: false,
   quizMode: "meaning",
   quizAnswered: false,
   extraPractice: false,
@@ -554,6 +557,12 @@ function quizWords(mode = "meaning") {
     ...filteredWords().filter(hasChineseMeaning),
     ...availableWords().filter(hasChineseMeaning)
   ]);
+}
+
+function dailyQuizQueue() {
+  const todayWords = todayLearnedWords();
+  const words = todayWords.length ? todayWords : filteredWords().slice(0, dailyGoal());
+  return uniqueWords(words).filter((word) => state.quizMode === "dictation" || hasChineseMeaning(word));
 }
 
 function lemmaOf(word) {
@@ -1039,13 +1048,40 @@ function setQuizMode(mode) {
   $("dictationModeBtn").classList.toggle("active", mode === "dictation");
 }
 
+function startQuizSession(mode = "meaning") {
+  setQuizMode(mode);
+  state.quizQueue = shuffle(dailyQuizQueue());
+  state.quizIndex = 0;
+  state.quizCompleted = false;
+  state.quizWord = state.quizQueue[0] || filteredWords()[0] || ALL_WORDS[0];
+  newQuiz(mode, true);
+}
+
+function renderQuizComplete() {
+  state.quizCompleted = true;
+  $("quizLevel").textContent = "完成";
+  $("quizMode").textContent = "今日检测";
+  $("quizPrompt").textContent = "今日检测完成";
+  $("listenDictation").classList.add("hidden");
+  $("choices").classList.add("hidden");
+  $("typingRow").classList.add("hidden");
+  $("playQuizWord").classList.add("hidden");
+  $("nextQuiz").textContent = "重新检测";
+  $("feedback").textContent = `这套检测已经完成：${state.quizQueue.length} 个词。`;
+  $("feedback").className = "feedback ok";
+}
+
 function newQuiz(mode = "meaning", keepCurrentWord = false) {
-  const words = quizWords(mode);
+  if (!state.quizQueue.length) {
+    startQuizSession(mode);
+    return;
+  }
   if (!keepCurrentWord || !state.quizWord) {
-    state.quizWord = words[Math.floor(Math.random() * words.length)] || ALL_WORDS[0];
+    state.quizWord = state.quizQueue[state.quizIndex] || state.quizQueue[0] || ALL_WORDS[0];
   }
   setQuizMode(mode);
   state.quizAnswered = false;
+  $("playQuizWord").classList.remove("hidden");
   $("quizLevel").textContent = state.quizWord.level;
   $("feedback").textContent = "";
   $("feedback").className = "feedback";
@@ -1053,18 +1089,18 @@ function newQuiz(mode = "meaning", keepCurrentWord = false) {
 
   if (state.quizMode === "dictation") {
     $("quizMode").textContent = "听写 · dictee";
-    $("quizPrompt").textContent = "听发音写单词";
+    $("quizPrompt").textContent = `第 ${state.quizIndex + 1} / ${state.quizQueue.length} 个：听发音写单词`;
     $("listenDictation").classList.remove("hidden");
     $("choices").classList.add("hidden");
     $("typingRow").classList.remove("hidden");
     $("playQuizWord").textContent = "再听一次";
-    $("nextQuiz").textContent = "下一题";
+    $("nextQuiz").textContent = state.quizIndex + 1 >= state.quizQueue.length ? "完成检测" : "下一个词";
     window.setTimeout(() => speak(state.quizWord.nl), 250);
     return;
   }
 
   $("quizMode").textContent = "猜词义 · betekenis";
-  $("quizPrompt").textContent = state.quizWord.nl;
+  $("quizPrompt").textContent = `第 ${state.quizIndex + 1} / ${state.quizQueue.length} 个：${state.quizWord.nl}`;
   $("listenDictation").classList.add("hidden");
   $("choices").classList.remove("hidden");
   $("typingRow").classList.add("hidden");
@@ -1117,6 +1153,7 @@ function checkTyping() {
   const expected = cleanDutch(state.quizWord.nl);
   const isCorrect = answer === expected;
   recordQuiz(isCorrect);
+  $("nextQuiz").textContent = state.quizIndex + 1 >= state.quizQueue.length ? "完成检测" : "下一个词";
   showFeedback(isCorrect);
 }
 
@@ -1160,16 +1197,30 @@ function setView(view) {
   document.querySelectorAll(".tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.view === view));
   document.querySelectorAll(".view").forEach((panel) => panel.classList.remove("active"));
   $(`${view}View`).classList.add("active");
-  if (view === "quiz") newQuiz("meaning");
+  if (view === "quiz") startQuizSession("meaning");
   if (view === "library") renderLibrary();
 }
 
 function handleNextQuiz() {
+  if (state.quizCompleted) {
+    startQuizSession("meaning");
+    return;
+  }
   if (state.quizMode === "meaning" && state.quizAnswered) {
     newQuiz("dictation", true);
     return;
   }
-  newQuiz("meaning");
+  if (state.quizMode === "meaning") {
+    newQuiz("dictation", true);
+    return;
+  }
+  state.quizIndex += 1;
+  if (state.quizIndex >= state.quizQueue.length) {
+    renderQuizComplete();
+    return;
+  }
+  state.quizWord = state.quizQueue[state.quizIndex];
+  newQuiz("meaning", true);
 }
 
 function bindEvents() {
@@ -1201,8 +1252,8 @@ function bindEvents() {
   $("listenDictation").addEventListener("click", () => speak(state.quizWord.nl));
   $("playQuizWord").addEventListener("click", () => speak(state.quizWord.nl));
   $("nextQuiz").addEventListener("click", handleNextQuiz);
-  $("meaningModeBtn").addEventListener("click", () => newQuiz("meaning"));
-  $("dictationModeBtn").addEventListener("click", () => newQuiz("dictation", true));
+  $("meaningModeBtn").addEventListener("click", () => startQuizSession("meaning"));
+  $("dictationModeBtn").addEventListener("click", () => startQuizSession("dictation"));
   $("typingCheck").addEventListener("click", checkTyping);
   $("typingAnswer").addEventListener("keydown", (event) => {
     if (event.key === "Enter") checkTyping();
