@@ -79,7 +79,15 @@
       </section>
 
       <section class="view active" id="learnView">
-        <article class="word-card">
+        <article class="goal-card hidden" id="goalCard">
+          <strong>今天目标完成</strong>
+          <p id="goalMessage">你已经完成今天的单词目标。</p>
+          <div class="goal-actions">
+            <button class="primary" id="goalQuizBtn" type="button">去检测</button>
+            <button class="secondary" id="goalMoreBtn" type="button">继续加练</button>
+          </div>
+        </article>
+        <article class="word-card" id="learnWordCard">
           <div class="word-meta">
             <span id="wordLevel">A2</span>
             <span id="wordPos">名词 · zelfstandig naamwoord</span>
@@ -97,7 +105,7 @@
           <div class="forms-panel" id="wordForms"></div>
         </article>
 
-        <div class="actions">
+        <div class="actions" id="learnActions">
           <button class="secondary" id="againBtn" type="button">还不熟</button>
           <button class="primary" id="knownBtn" type="button">记住了</button>
         </div>

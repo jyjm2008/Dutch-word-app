@@ -302,6 +302,7 @@ const state = {
   quizWord: null,
   quizMode: "meaning",
   quizAnswered: false,
+  extraPractice: false,
   progress: loadProgress()
 };
 
@@ -387,6 +388,18 @@ function loadProgress() {
 function saveProgress() {
   state.progress.lastDay = todayKey;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
+}
+
+function learnedTodayCount() {
+  return (state.progress.days[todayKey] || []).length;
+}
+
+function dailyGoal() {
+  return Number(state.progress.goal) || 20;
+}
+
+function isDailyGoalDone() {
+  return learnedTodayCount() >= dailyGoal();
 }
 
 function refreshVoices() {
@@ -922,9 +935,8 @@ function renderForms(word) {
 }
 
 function renderStats() {
-  const dayWords = state.progress.days[todayKey] || [];
   const { total, correct } = state.progress.stats;
-  $("learnedToday").textContent = dayWords.length;
+  $("learnedToday").textContent = learnedTodayCount();
   $("accuracy").textContent = total ? `${Math.round((correct / total) * 100)}%` : "0%";
   $("streak").textContent = calculateStreak();
 }
@@ -944,6 +956,14 @@ function calculateStreak() {
 function renderLearn() {
   const word = currentWord();
   const example = displayExample(word);
+  const goalDone = isDailyGoalDone();
+  const pausedForGoal = goalDone && !state.extraPractice;
+  $("goalCard").classList.toggle("hidden", !goalDone);
+  $("goalMessage").textContent = goalDone
+    ? `今天已背 ${learnedTodayCount()} / ${dailyGoal()} 个词。可以去检测巩固，或继续加练。`
+    : "";
+  $("learnWordCard").classList.toggle("hidden", pausedForGoal);
+  $("learnActions").classList.toggle("hidden", pausedForGoal);
   $("wordLevel").textContent = word.level;
   $("wordPos").textContent = displayPos(word);
   $("wordText").textContent = word.nl;
@@ -953,9 +973,20 @@ function renderLearn() {
   $("wordExampleZh").textContent = example.zh;
   renderForms(word);
   renderStats();
+  $("againBtn").textContent = goalDone && !state.extraPractice ? "去检测" : "还不熟";
+  $("knownBtn").textContent = goalDone && !state.extraPractice ? "继续加练" : "记住了";
 }
 
 function markKnown(isKnown) {
+  if (isDailyGoalDone() && !state.extraPractice) {
+    if (isKnown) {
+      state.extraPractice = true;
+      renderLearn();
+    } else {
+      setView("quiz");
+    }
+    return;
+  }
   const word = currentWord();
   const current = state.progress.learned[word.nl] || { seen: 0, known: 0 };
   current.seen += 1;
@@ -1149,9 +1180,16 @@ function bindEvents() {
     if (event.key === "Enter") checkTyping();
   });
   $("searchBox").addEventListener("input", renderLibrary);
+  $("goalQuizBtn").addEventListener("click", () => setView("quiz"));
+  $("goalMoreBtn").addEventListener("click", () => {
+    state.extraPractice = true;
+    renderLearn();
+  });
   $("dailyGoal").addEventListener("change", (event) => {
     state.progress.goal = Number(event.target.value) || 20;
+    state.extraPractice = false;
     saveProgress();
+    renderLearn();
   });
   $("levelFilter").addEventListener("change", (event) => {
     state.level = event.target.value;
