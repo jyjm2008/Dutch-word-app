@@ -87,8 +87,15 @@ const WORDS = [
 const STORAGE_KEY = "nl-a2-c1-progress";
 const FREE_WORD_LIMIT = 200;
 const PRO_CODE_HASHES = new Set(["1JFRT6M", "SCZG1W", "6VP5N3", "YRF4GA", "16SYMAL", "1A0SHIK", "10I0QK7", "70YGCM", "8TLFP5", "17LJC4O", "15JMLAR", "1MH5ZC2", "SGRLNG"]);
-const todayKey = new Date().toISOString().slice(0, 10);
+const todayKey = localDateKey();
 const $ = (id) => document.getElementById(id);
+
+function localDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 const VERB_FORMS = {
   aanvragen: {
@@ -532,6 +539,8 @@ function currentWord() {
     return words[state.reviewIndex % words.length] || filteredWords()[0] || ALL_WORDS[0];
   }
   const words = filteredWords();
+  const unlearned = words.filter((word) => !state.progress.learned[word.nl]);
+  if (unlearned.length) return unlearned[0];
   return words[state.currentIndex % words.length] || ALL_WORDS[0];
 }
 
