@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.json" />
     <link rel="icon" href="icons/icon-192.png" />
     <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=34" />
+    <link rel="stylesheet" href="styles.css?v=35" />
   </head>
   <body>
     <main class="app-shell">
@@ -18,7 +18,7 @@
         <div>
           <p class="eyebrow">Dagelijks woorden leren</p>
           <h1>Nederlands A1-C1</h1>
-          <p class="version-tag">版本 v34：系统修正默认例句和未核对复数</p>
+          <p class="version-tag">版本 v35：删除记忆提示，保留词形和例句</p>
         </div>
         <button class="icon-button" id="speakCurrent" type="button" aria-label="播放当前单词" title="播放当前单词">
           <span aria-hidden="true">▶</span>
@@ -99,7 +99,6 @@
             <small id="wordIpa">/woːrt/</small>
           </button>
           <div class="meaning" id="wordMeaning">中文释义</div>
-          <p class="study-hint" id="studyHint">记忆提示</p>
           <div class="example-line">
             <p class="example" id="wordExample">Voorbeeldzin.</p>
             <button class="mini-button" id="speakExample" type="button" aria-label="播放例句" title="播放例句">▶</button>
@@ -148,12 +147,12 @@
       </section>
     </main>
 
-    <script src="wordbank-extra.js?v=34"></script>
-    <script src="audio-index.js?v=34"></script>
-    <script src="app.js?v=34"></script>
+    <script src="wordbank-extra.js?v=35"></script>
+    <script src="audio-index.js?v=35"></script>
+    <script src="app.js?v=35"></script>
     <script>
       if ("serviceWorker" in navigator && location.protocol !== "file:") {
-        navigator.serviceWorker.register("./sw.js?v=34");
+        navigator.serviceWorker.register("./sw.js?v=35");
       }
     </script>
   </body>

@@ -667,31 +667,6 @@ function displayPos(word) {
   return word.pos;
 }
 
-function studyHint(word) {
-  const lemma = lemmaOf(word);
-  if (isNoun(word)) {
-    const details = NOUN_FORMS[lemma];
-    const article = details?.[0] || articleOf(word) || "de/het";
-    const plural = details?.[1] || "";
-    if (hasNoCommonPlural(plural)) {
-      return `记忆提示：${article} ${lemma} 通常当不可数/抽象名词来记，不要硬背复数。`;
-    }
-    if (!plural) {
-      return `记忆提示：先记 ${article} ${lemma}。复数需要核对后再背，不在这里硬猜。`;
-    }
-    return `记忆提示：把 ${article} ${lemma} 和复数 ${plural.split(" / ")[0]} 连起来读。`;
-  }
-  if (isVerb(word)) {
-    const forms = VERB_FORMS[lemma];
-    const present = forms?.forms?.[0]?.[1] || lemma;
-    return `记忆提示：先记动词原形 ${lemma}，再跟着一个变位读：${present}。`;
-  }
-  if (isAdjective(word)) {
-    return `记忆提示：把 ${lemma} 放进一个短句里读，比如和 een/de/het 加名词搭配。`;
-  }
-  return `记忆提示：先遮住中文，读荷兰语，再用例句里的场景想意思。`;
-}
-
 function isVerb(word) {
   return word.pos.includes("werkwoord") || VERB_PHRASES.has(word.nl.toLowerCase());
 }
@@ -1127,7 +1102,6 @@ function renderLearn() {
   $("wordText").textContent = word.nl;
   $("wordIpa").textContent = word.ipa;
   $("wordMeaning").textContent = displayMeaning(word);
-  $("studyHint").textContent = studyHint(word);
   $("wordExample").textContent = example.nl;
   $("wordExampleZh").textContent = example.zh;
   renderForms(word);

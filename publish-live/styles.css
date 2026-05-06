@@ -337,15 +337,6 @@ input {
   line-height: 1.35;
 }
 
-.study-hint {
-  margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: #ecfeff;
-  color: #155e75;
-  line-height: 1.45;
-}
-
 .example,
 .example-zh {
   margin-top: 12px;
