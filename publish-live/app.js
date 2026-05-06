@@ -540,7 +540,7 @@ function currentWord() {
   }
   const words = filteredWords();
   const unlearned = words.filter((word) => !state.progress.learned[word.nl]);
-  if (unlearned.length) return unlearned[0];
+  if (unlearned.length) return dailyShuffledWords(unlearned)[0];
   return words[state.currentIndex % words.length] || ALL_WORDS[0];
 }
 
@@ -550,6 +550,23 @@ function uniqueWords(words) {
     if (seen.has(word.nl)) return false;
     seen.add(word.nl);
     return true;
+  });
+}
+
+function hashText(text) {
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function dailyShuffledWords(words) {
+  return [...words].sort((left, right) => {
+    const leftScore = hashText(`${todayKey}|${state.level}|${left.nl}`);
+    const rightScore = hashText(`${todayKey}|${state.level}|${right.nl}`);
+    return leftScore - rightScore;
   });
 }
 
@@ -576,7 +593,7 @@ function quizWords(mode = "meaning") {
 
 function dailyQuizQueue() {
   const todayWords = todayLearnedWords();
-  const words = todayWords.length ? todayWords : filteredWords().slice(0, dailyGoal());
+  const words = todayWords.length ? todayWords : dailyShuffledWords(filteredWords()).slice(0, dailyGoal());
   return uniqueWords(words).filter((word) => state.quizMode === "dictation" || hasChineseMeaning(word));
 }
 
@@ -634,6 +651,25 @@ function displayPos(word) {
   if (isAdjective(word)) return "形容词 / bijvoeglijk naamwoord";
   if (word.pos.includes("woord")) return "其他 / woord";
   return word.pos;
+}
+
+function studyHint(word) {
+  const lemma = lemmaOf(word);
+  if (isNoun(word)) {
+    const details = NOUN_FORMS[lemma];
+    const article = details?.[0] || articleOf(word) || "de/het";
+    const plural = details?.[1] || guessPlural(lemma);
+    return `记忆提示：把 ${article} ${lemma} 和复数 ${plural.split(" / ")[0]} 连起来读。`;
+  }
+  if (isVerb(word)) {
+    const forms = VERB_FORMS[lemma];
+    const present = forms?.forms?.[0]?.[1] || lemma;
+    return `记忆提示：先记动词原形 ${lemma}，再跟着一个变位读：${present}。`;
+  }
+  if (isAdjective(word)) {
+    return `记忆提示：把 ${lemma} 放进一个短句里读，比如和 een/de/het 加名词搭配。`;
+  }
+  return `记忆提示：先遮住中文，读荷兰语，再用例句里的场景想意思。`;
 }
 
 function isVerb(word) {
@@ -1023,6 +1059,7 @@ function renderLearn() {
   $("wordText").textContent = word.nl;
   $("wordIpa").textContent = word.ipa;
   $("wordMeaning").textContent = displayMeaning(word);
+  $("studyHint").textContent = studyHint(word);
   $("wordExample").textContent = example.nl;
   $("wordExampleZh").textContent = example.zh;
   renderForms(word);
