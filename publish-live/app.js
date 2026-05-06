@@ -189,6 +189,20 @@ const VERB_FORMS = {
 };
 
 const NOUN_FORMS = {
+  gezondheid: ["de", "geen gewone meervoudsvorm"],
+  mist: ["de", "geen gewone meervoudsvorm"],
+  griep: ["de", "geen gewone meervoudsvorm"],
+  koorts: ["de", "geen gewone meervoudsvorm"],
+  honger: ["de", "geen gewone meervoudsvorm"],
+  dorst: ["de", "geen gewone meervoudsvorm"],
+  pijn: ["de", "geen gewone meervoudsvorm"],
+  rust: ["de", "geen gewone meervoudsvorm"],
+  geld: ["het", "geen gewone meervoudsvorm"],
+  fruit: ["het", "geen gewone meervoudsvorm"],
+  vlees: ["het", "geen gewone meervoudsvorm"],
+  boter: ["de", "geen gewone meervoudsvorm"],
+  yoghurt: ["de", "geen gewone meervoudsvorm"],
+  groente: ["de", "groenten"],
   afspraak: ["de", "afspraken"],
   belasting: ["de", "belastingen"],
   rekening: ["de", "rekeningen"],
@@ -658,7 +672,13 @@ function studyHint(word) {
   if (isNoun(word)) {
     const details = NOUN_FORMS[lemma];
     const article = details?.[0] || articleOf(word) || "de/het";
-    const plural = details?.[1] || guessPlural(lemma);
+    const plural = details?.[1] || "";
+    if (hasNoCommonPlural(plural)) {
+      return `记忆提示：${article} ${lemma} 通常当不可数/抽象名词来记，不要硬背复数。`;
+    }
+    if (!plural) {
+      return `记忆提示：先记 ${article} ${lemma}。复数需要核对后再背，不在这里硬猜。`;
+    }
     return `记忆提示：把 ${article} ${lemma} 和复数 ${plural.split(" / ")[0]} 连起来读。`;
   }
   if (isVerb(word)) {
@@ -701,6 +721,14 @@ function guessPlural(lemma) {
   return `${lemma}en`;
 }
 
+function hasNoCommonPlural(plural) {
+  return /geen gewone meervoudsvorm/i.test(plural);
+}
+
+function likelyPlural(lemma) {
+  return `可能是 ${guessPlural(lemma)}，需核对`;
+}
+
 const VERB_PHRASES = new Set(["de planten water geven"]);
 const PHRASES = new Set(["het is één uur.", "het is..."]);
 const TRANSLATION_FIXES = {
@@ -724,7 +752,11 @@ const TRANSLATION_FIXES = {
   "de richting": "方向",
   "de rust": "安静；休息",
   "het medicijn": "药",
-  "het symptoom": "症状"
+  "het symptoom": "症状",
+  "gezond": "健康的",
+  "ongezond": "不健康的；不良的",
+  "de gezondheid": "健康；健康状况",
+  "de mist": "雾；雾气"
 };
 
 const SEMANTIC_EXAMPLES = {
@@ -809,6 +841,7 @@ const SEMANTIC_EXAMPLES = {
   dorst: [["Ik heb dorst na het fietsen.", "骑车后我口渴。"], ["Heb je dorst? Neem wat water.", "你口渴吗？喝点水。"], ["Door de hitte krijg ik snel dorst.", "天气热我很容易口渴。"]],
   feestdag: [["Op een feestdag zijn veel winkels dicht.", "节假日很多商店关门。"], ["Kerstmis is een feestdag.", "圣诞节是节假日。"], ["Wij hebben vrij op deze feestdag.", "这个节假日我们休息。"]],
   gezondheid: [["Gezondheid is belangrijk.", "健康很重要。"], ["Ik sport voor mijn gezondheid.", "我为了健康运动。"], ["De dokter vraagt naar mijn gezondheid.", "医生询问我的健康状况。"]],
+  mist: [["Er hangt mist boven de straat.", "街道上方有雾。"], ["Door de mist zie ik weinig.", "因为雾，我看不清。"], ["Vanmorgen was er veel mist.", "今天早上雾很大。"]],
   griep: [["Ik heb griep en blijf thuis.", "我得了流感，待在家里。"], ["Bij griep moet je veel drinken.", "流感时要多喝水。"], ["Mijn dochter heeft deze week griep.", "我女儿这周得了流感。"]],
   groente: [["Ik eet elke dag groente.", "我每天吃蔬菜。"], ["De groente ligt in de koelkast.", "蔬菜在冰箱里。"], ["Op de markt koop ik verse groente.", "我在市场买新鲜蔬菜。"]],
   herfst: [["In de herfst vallen de bladeren.", "秋天树叶会落下。"], ["De herfst begint in september.", "秋天从九月开始。"], ["In de herfst draag ik een jas.", "秋天我穿外套。"]],
@@ -848,21 +881,42 @@ function generatedExamples(word) {
   const meaning = cleanMeaning(word);
 
   if (isNoun(word)) {
+    const details = NOUN_FORMS[lemma];
+    const plural = details?.[1] || "";
+    if (hasNoCommonPlural(plural)) {
+      return pickByWord(word, [
+        [
+          [`${capitalizeDutch(noun)} is belangrijk in het dagelijks leven.`, `${meaning}在日常生活中很重要。`],
+          [`We praten over ${noun}.`, `我们谈论${meaning}。`],
+          [`Ik let op ${noun}.`, `我注意${meaning}。`]
+        ],
+        [
+          [`Er is veel ${lemma} vandaag.`, `今天有很多${meaning}。`],
+          [`Door ${noun} verandert mijn plan.`, `因为${meaning}，我的计划变了。`],
+          [`Ik merk ${noun} meteen.`, `我马上注意到${meaning}。`]
+        ],
+        [
+          [`De dokter vraagt naar ${noun}.`, `医生询问${meaning}。`],
+          [`Ik zorg goed voor ${noun}.`, `我好好照顾${meaning}。`],
+          [`${capitalizeDutch(noun)} blijft belangrijk.`, `${meaning}仍然很重要。`]
+        ]
+      ]);
+    }
     return pickByWord(word, [
       [
-        [`Ik zie ${article ? noun : `een ${lemma}`} op tafel.`, `我在桌上看到${meaning}。`],
-        [`Waar is ${article ? noun : `de ${lemma}`}?`, `${meaning}在哪里？`],
-        [`Dit is ${article ? noun : `een ${lemma}`}.`, `这是${meaning}。`]
+        [`We praten over ${noun}.`, `我们谈论${meaning}。`],
+        [`Ik leer vandaag iets over ${noun}.`, `我今天学习一点关于${meaning}的内容。`],
+        [`${capitalizeDutch(noun)} komt vaak voor in het dagelijks leven.`, `${meaning}在日常生活中经常出现。`]
       ],
       [
-        [`${capitalizeDutch(article ? noun : `de ${lemma}`)} ligt in mijn tas.`, `${meaning}在我的包里。`],
-        [`Ik gebruik ${article ? noun : `de ${lemma}`} vandaag.`, `我今天使用${meaning}。`],
-        [`Heb jij ${article ? noun : `een ${lemma}`}?`, `你有${meaning}吗？`]
+        [`Ik schrijf een zin met ${noun}.`, `我用${meaning}写一个句子。`],
+        [`Kun je iets vertellen over ${noun}?`, `你能说说${meaning}吗？`],
+        [`In de les oefenen we met ${noun}.`, `课上我们练习${meaning}。`]
       ],
       [
-        [`We praten over ${article ? noun : `de ${lemma}`}.`, `我们谈论${meaning}。`],
-        [`Ik zoek ${article ? noun : `een ${lemma}`}.`, `我在找${meaning}。`],
-        [`${capitalizeDutch(article ? noun : `de ${lemma}`)} is belangrijk.`, `${meaning}很重要。`]
+        [`Ik wil ${noun} goed onthouden.`, `我想好好记住${meaning}。`],
+        [`Dit voorbeeld gaat over ${noun}.`, `这个例子是关于${meaning}的。`],
+        [`${capitalizeDutch(noun)} is een belangrijk woord.`, `${meaning}是一个重要的词。`]
       ]
     ]);
   }
@@ -954,8 +1008,22 @@ function buildWordForms(word) {
   if (isNoun(word)) {
     const details = NOUN_FORMS[lemma];
     const article = details?.[0] || articleOf(word) || "de/het";
-    const plural = details?.[1] || guessPlural(lemma);
+    const plural = details?.[1] || "";
     const examples = generatedExamples(word);
+    if (hasNoCommonPlural(plural)) {
+      return {
+        title: "名词词形 · zelfstandig naamwoord",
+        forms: [["定冠词", article], ["单数", `${article} ${lemma}`], ["复数", "通常不作普通复数使用"], ["用法", "多作为不可数、抽象或自然现象名词"]],
+        examples: [...examples, [`Ik onthoud: ${article} ${lemma} heeft meestal geen gewone meervoudsvorm.`, `我记住：${article} ${lemma} 通常没有普通复数。`]]
+      };
+    }
+    if (!plural) {
+      return {
+        title: "名词词形 · zelfstandig naamwoord",
+        forms: [["定冠词", article], ["单数", `${article} ${lemma}`], ["复数", "待核对"], ["可能形式", likelyPlural(lemma)]],
+        examples
+      };
+    }
     return {
       title: "名词词形 · zelfstandig naamwoord",
       forms: [["定冠词", article], ["单数", `${article} ${lemma}`], ["复数", plural], ["复数带定冠词", `de ${plural.split(" / ")[0]}`]],
